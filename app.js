@@ -1,4 +1,8 @@
 var express = require('express');
+var exphbs  = require('express-handlebars');
+var sassMiddleware = require('node-sass-middleware');
+var browserify = require('browserify-middleware');
+
 var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
@@ -12,8 +16,33 @@ var todos = require('./routes/todos');
 var app = express();
 
 // view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+app.engine('hbs', exphbs({extname: '.hbs', defaultLayout: 'layout'}));
+app.set('view engine', 'hbs');
+
+app.use(sassMiddleware({
+ src: __dirname + '/sass',
+ dest: __dirname + '/public',
+ // prefix: '/stylesheets',
+ debug: true,
+}) );
+
+app.get('/javascripts/bundle.js', browserify('./client/script.js'));
+
+var mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost/todos');
+
+if (app.get('env') == 'development') {
+  var browserSync = require('browser-sync');
+  var config = {
+    files: ["public/**/*.{js,css}", "client/*.js", "sass/**/*.scss", "views/**/*.hbs"],
+    logLevel: 'info',
+    logSnippet: false,
+    reloadDelay: 3000,
+    reloadOnRestart: true
+  };
+  var bs = browserSync(config);
+  app.use(require('connect-browser-sync')(bs));
+}
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
