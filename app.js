@@ -11,7 +11,8 @@ var bodyParser = require('body-parser');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
-var todos = require('./routes/todos');
+var todos = require('./routes/todos/index');
+var todos_api = require('./routes/todos/api');
 
 var app = express();
 
@@ -24,7 +25,11 @@ app.use(sassMiddleware({
  dest: __dirname + '/public',
  // prefix: '/stylesheets',
  debug: true,
-}) );
+}));
+
+browserify.settings({
+  transform: ['hbsfy']
+});
 
 app.get('/javascripts/bundle.js', browserify('./client/script.js'));
 
@@ -55,6 +60,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', routes);
 app.use('/users', users);
 app.use('/todos', todos);
+app.use('/api/todos', todos_api);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
